@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api;
 use App\Dtos\UserDto;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\RegisterUserRequest;
+use App\Models\User;
 use App\Services\UserService;
 use Illuminate\Http\Request;
 

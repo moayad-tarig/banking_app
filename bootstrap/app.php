@@ -1,9 +1,10 @@
 <?php
 
+use App\Exceptions\CustomeHandlingException;
 use App\Http\Middleware\ForceJsonResponse;
 use Illuminate\Foundation\Application;
-use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
+use Illuminate\Foundation\Configuration\Exceptions;
 
 return Application::configure(basePath: dirname(__DIR__))
     ->withRouting(
@@ -21,5 +22,11 @@ return Application::configure(basePath: dirname(__DIR__))
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions) {
-        //
+       
+        $handler = new CustomeHandlingException();
+
+        $exceptions->render(function (\Throwable $exception) use ($handler) {
+            return $handler->handle($exception);
+        });
+        
     })->create();
