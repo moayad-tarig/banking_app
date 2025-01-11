@@ -21,7 +21,6 @@ class CustomeHandlingException extends Exception
 
     public function handle(Exception $e) 
     {
-        
         Log::error($e);
         if ($e instanceof AuthenticationException) {
             $statusCode = Response::HTTP_UNAUTHORIZED;
