@@ -8,6 +8,7 @@ use Illuminate\Auth\AuthenticationException;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Database\QueryException;
 use Illuminate\Database\UniqueConstraintViolationException;
+use Illuminate\Http\Response as HttpResponse;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Validation\ValidationException;
 use Symfony\Component\HttpFoundation\Response;
@@ -21,6 +22,7 @@ class CustomeHandlingException extends Exception
 
     public function handle(Exception $e) 
     {
+      
         Log::error($e);
         if ($e instanceof AuthenticationException) {
             $statusCode = Response::HTTP_UNAUTHORIZED;
@@ -32,9 +34,10 @@ class CustomeHandlingException extends Exception
             ], $statusCode);
         }
         if ($e instanceof NotFoundHttpException) {
+            
             return $this->apiResponse([
-                // 'message' => $e->getMessage(),
-                'message' => 'No Data Found ',
+                'message' => $e->getMessage(),
+                // 'message' => 'No Data Found ',
                 'success' => false,
                 'exception' => $e,
                 'error_code' => $e->getStatusCode(),
@@ -49,6 +52,15 @@ class CustomeHandlingException extends Exception
                 'error_code' => $statusCode,
                 'errors' => $e->errors(),
             ], $statusCode);
+        }
+
+        if($e instanceof AccountNumberExistsException){
+            return $this->apiResponse([
+                'message' => $e->getMessage(),
+                'success' => false,
+                'exception' => $e,
+                'error_code' => HttpResponse::HTTP_NOT_FOUND,
+            ], HttpResponse::HTTP_NOT_FOUND);
         }
         if ($e instanceof ModelNotFoundException) {
             $statusCode = Response::HTTP_NOT_FOUND;
@@ -78,6 +90,10 @@ class CustomeHandlingException extends Exception
                 'error_code' => $statusCode,
             ]);
         }
+
+      
+
+
         if ($e instanceof MethodNotAllowedHttpException) {
             return $this->apiResponse([
                 'message' => $e->getMessage(),
@@ -86,6 +102,7 @@ class CustomeHandlingException extends Exception
                 'error_code' => Response::HTTP_METHOD_NOT_ALLOWED,
             ], Response::HTTP_METHOD_NOT_ALLOWED);
         }
+        
      
         if ($e instanceof \Exception) {
             $statusCode = Response::HTTP_INTERNAL_SERVER_ERROR;
