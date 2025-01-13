@@ -53,7 +53,6 @@ class UserService implements UserServicesInterface
     }
     public function hasSetPin(User $user): bool
     {
-
         return $user->pin != null;
     }
     public function  getUserById(int $userId): User

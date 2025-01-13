@@ -2,6 +2,7 @@
 
 use App\Exceptions\CustomeHandlingException;
 use App\Http\Middleware\ForceJsonResponse;
+use App\Http\Middleware\HasSetPinMiddleware;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Middleware;
 use Illuminate\Foundation\Configuration\Exceptions;
@@ -17,10 +18,13 @@ return Application::configure(basePath: dirname(__DIR__))
     ->withMiddleware(function (Middleware $middleware) {
         $middleware->alias([
             'force.json' => ForceJsonResponse::class,
+            'has.set.pin' => HasSetPinMiddleware::class,
         ]);
+      
         $middleware->group('api', [
             'force.json',
         ]);
+
     })
     ->withExceptions(function (Exceptions $exceptions) {
 

@@ -2,19 +2,28 @@
 
 namespace App\Services;
 
+use App\Dtos\AccountDto;
+use App\Dtos\DepositDto;
+use App\Dtos\TransactionDto;
 use App\Dtos\UserDto;
+use App\Events\TransactionEvent;
 use App\Exceptions\AccountNumberExistsException;
+use App\Exceptions\DepositAmountToLowException;
 use App\Exceptions\InvalidAccountNumberException;
 use App\Interfaces\AccountServiceInterface;
 use App\Models\Account;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Support\Facades\DB;
 
 class AccountService implements AccountServiceInterface
 {
     /**
      * Create a new class instance.
      */
-    public function __construct()
+    public function __construct(
+        private readonly UserService        $userService,
+        private readonly TransactionService $transactionService,
+    )
     {
         //
     }
@@ -71,6 +80,36 @@ class AccountService implements AccountServiceInterface
     {
         if (!$accountQuery->exists()) {
             throw new InvalidAccountNumberException();
+        }
+    }
+
+    public function deposit(DepositDto  $depositDto): TransactionDto {
+
+        $minimum_depoit = 500;
+        if($depositDto->getAmount() < $minimum_depoit) {
+            throw new DepositAmountToLowException($minimum_depoit);
+        }
+
+        try {
+            DB::beginTransaction();
+            $transactionDto = new TransactionDto();
+
+            $accountQuery = $this->modelQuery()->where('account_number', $depositDto->getAccountNumber());
+            $this->accountExist($accountQuery);
+            $lockedAccount = $accountQuery->lockForUpdate()->first();
+            $accountDto = AccountDto::fromModel($lockedAccount);
+            $refrence = $this->transactionService->generateReferenceNumber();
+            $transactionDto = $transactionDto->forDeposit($accountDto ,$refrence ,$depositDto->getAmount(), $depositDto->getDescription());
+
+            event(new TransactionEvent($transactionDto, $accountDto, $lockedAccount));
+
+            
+
+            DB::commit();
+            return $transactionDto;
+        } catch (\Exception $e) {
+            DB::rollBack();
+            throw $e;
         }
     }
 }
